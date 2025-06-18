@@ -8,3 +8,9 @@ tokio = { version = "1.45.1", features = ["full"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 
+[profile.release]
+opt-level = "z"         # Optimize for size ("z" = smallest, "s" = small, "3" = max speed)
+lto = true              # Enable Link Time Optimization for better performance and smaller binaries
+codegen-units = 1       # Use a single codegen unit for better optimization (slower compile, faster/smaller binary)
+panic = "abort"         # Abort immediately on panic (smaller binary, no stack unwinding)
+strip = true            # Remove debug symbols from the final binary (smaller binary)

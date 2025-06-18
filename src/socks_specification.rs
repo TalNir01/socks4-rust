@@ -2,15 +2,25 @@ use std::io::{self};
 use std::net::Ipv4Addr;
 use tokio::io::{AsyncRead, AsyncReadExt};
 
+/// Client request structure for SOCKS4 protocol
+/// This is the structure that states the target connection details
 #[derive(Debug)]
 pub struct Socks4Request {
-    pub version: u8,      // Always 0x04
-    pub command: u8,      // 0x01 for CONNECT
-    pub dst_port: u16,    // Destination port (big-endian)
-    pub dst_ip: Ipv4Addr, // Destination IPv4 address
-    pub user_id: String,  // Null-terminated USERID
+    // Always 0x04
+    pub version: u8,
+    // 0x01 for CONNECT
+    pub command: u8,
+    // Destination port (big-endian)
+    pub dst_port: u16,
+    // Destination IPv4 address
+    pub dst_ip: Ipv4Addr,
+    /// Null-terminated USERID
+    pub user_id: String,
 }
 
+// Server response structure for SOCKS4 protocol.
+// After initiating a connection, the server responds with this structure.
+// So the client knows the connection status and destination details.
 #[derive(Debug)]
 pub struct Socks4Response {
     // pub version: u8,      // Always 0x00 in response
@@ -20,7 +30,8 @@ pub struct Socks4Response {
 }
 
 impl Socks4Response {
-    /// Serialize the SOCKS4 response to bytes
+    /// Serialize (To bytes) the Socks4Response to a byte vector.
+    /// This format is sentable over the network.
     pub fn to_bytes(&self) -> Vec<u8> {
         // 8 bytes total:
         let mut buf = Vec::new(); // Vector to hold bytes
@@ -33,6 +44,12 @@ impl Socks4Response {
 }
 
 impl Socks4Request {
+    /// Deserialize (the bytes array) into a Socks4Request structure.
+    /// This function reads the SOCKS4 request from the provided stream.
+    /// # Arguments
+    /// * `stream` - The stream to read the SOCKS4 request from.
+    /// # Returns
+    /// A `Socks4Request` structure containing the parsed request data.
     pub async fn from_stream<R: AsyncRead + Unpin>(stream: &mut R) -> io::Result<Socks4Request> {
         // Buffer for fixed header fields (version, command, port, ip)
         let mut header = [0u8; 8];
@@ -74,14 +91,16 @@ impl Socks4Request {
             stream.read_exact(&mut byte).await?; // Read one byte at a time
 
             if byte[0] == 0 {
+                // Null byte, stop 'searching'
                 break;
             }
             user_id_bytes.push(byte[0]); // Append byte to user_id_bytes, if not null
         }
 
+        // Convert user_id_bytes to String
         let user_id = String::from_utf8(user_id_bytes)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-
+        // Create and return the Socks4Request structure
         Ok(Socks4Request {
             version: version,
             command: command,

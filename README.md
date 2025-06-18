@@ -4,7 +4,7 @@ This project was done for educational purposes. Simple Socks4 Server.
 
 Basic Features:
 * Listening port and interface given by command line argument
-* Logs - For every new connection
+* Logs - Tracing
 * Async
 * Code docstring
 

@@ -1,3 +1,4 @@
+//! Constants for the SOCKS protocol
 pub mod socks4_status {
     /// Request granted
     pub const REQUEST_GRANTED: u8 = 0x5A;
